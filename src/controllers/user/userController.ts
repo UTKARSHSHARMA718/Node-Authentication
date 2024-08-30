@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express"
 import User from "../../Models/User/UserModel"
 import httpError from "../../utils/httpError"
 import httpResponses from "../../utils/httpResponses"
-import { z } from "zod"
+import { validationResult } from "express-validator"
 
 export const Register = async (
     req: Request,
@@ -11,46 +11,18 @@ export const Register = async (
 ) => {
     try {
         const { name, email, password, mobile } = req?.body || {}
-        const fileName = req?.file?.filename || {}
+        const fileName = req?.file?.filename ?? {}
+        const isUserInputInvalid = validationResult(req)
 
-        if (!name || !email || !password || !mobile) {
+        console.log({ isUserInputInvalid })
+        if (isUserInputInvalid) {
             return httpError({
                 req,
-                errorStatusCode: 400,
                 nextFunc: next,
-                err: "Invalid Request!",
-        })
-        }
-
-        const userValidationObject = z.object({
-            name: z.string({ message: "Must be a string" }),
-            email: z
-                .string({ message: "Must be a string" })
-                .email("Must be an email!"),
-            password: z
-                .string()
-                .min(8, "At of 8 characters")
-                .max(16, "At max of 16 characters"),
-            mobile: z.string().length(10, "Must be of length 10"),
-        })
-
-        const isUserInputValid = userValidationObject.parse({
-            name,
-            email,
-            password,
-            mobile,
-        })
-
-        if (!isUserInputValid) {
-            console.log({ isUserInputValid })
-            return httpError({
-                req,
+                err: isUserInputInvalid,
                 errorStatusCode: 400,
-                nextFunc: next,
-                err: "Invalid Request!",
             })
         }
-
         const userExist = await User.findOne({ email })
 
         if (userExist) {
