@@ -9,5 +9,6 @@ export default (
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     __: NextFunction
 ) => {
-    res.status(err.statusCode).json(err)
+    console.log({ err })
+    res.status(err?.statusCode || 500).json(err)
 }

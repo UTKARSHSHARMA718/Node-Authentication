@@ -1,14 +1,24 @@
 import express from "express"
 import multer from "multer"
 import path from "path"
-import { Register } from "../../controllers/user/userController";
+import {
+    GetPdf,
+    Register,
+    UploadImage,
+    UploadPdf,
+} from "../../controllers/user/userController"
 
 const userRouter = express.Router()
 const storage = multer.diskStorage({
     destination: (_req, file, cb) => {
         if (file.mimetype === "image/jpeg" || file.mimetype === "image/png") {
             cb(null, path.join(__dirname, "..", "..", "..", "public", "images"))
-            return;
+            return
+        }
+
+        if (file?.mimetype === "application/pdf") {
+            cb(null, path.join(__dirname, "..", "..", "..", "public", "pdfs"))
+            return
         }
     },
     filename: (_req, file, cb) => {
@@ -23,8 +33,14 @@ const uploads = multer({
     },
 })
 
-userRouter.post("/upload", uploads.single("profile-pic"))
+userRouter.post("/upload", uploads.single("profile-pic"), UploadImage)
+
+userRouter.post("/pdf/:email", uploads.single("pdf"), UploadPdf)
+
+userRouter.get("/pdf/:email", uploads.single("pdf"), GetPdf)
 
 userRouter.post("/register", Register)
+
+userRouter.put("/forgot-password")
 
 export default userRouter

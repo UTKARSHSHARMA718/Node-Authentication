@@ -6,11 +6,15 @@ import responseMessage from "./constant/responseMessage"
 import httpError from "./utils/httpError"
 import helmet from "helmet"
 import cors from "cors"
+import swaggerUI from "swagger-ui-express"
+import swaggerOutput from "../swagger_output.json"
+import sessions from "express-session"
 
 const app = express()
 
 //Middlewares
 app.use(helmet())
+
 app.use(
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     cors({
@@ -18,10 +22,29 @@ app.use(
         origin: process.env.ORIGIN_URL,
     })
 )
-app.use(express.json())
-app.use(express.static(path.join(__dirname, "../", "public")))
 
-//Routes
+// set the view engine to ejs
+app.set("view engine", "ejs")
+
+app.use(express.json())
+
+app.use(express.static(path.join(__dirname, "../", "public")))
+app.use(express.static(path.join(__dirname, "../", "views")))
+
+app.use(
+    "/api/docs",
+    swaggerUI.serve,
+    swaggerUI.setup(swaggerOutput, { explorer: true })
+)
+
+app.use(sessions({
+    resave: false,
+    saveUninitialized: true,
+    secret: process.env.SESSION_SECRET! 
+}));
+
+app.set("views", path.join(__dirname, "../", "views"))
+
 app.use("/api/v1", router)
 
 //404 handler
